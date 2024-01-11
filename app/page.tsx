@@ -83,8 +83,8 @@ export default function Home() {
     <main className="grid grid-cols-3 min-h-screen items-center justify-center">
       <div
         className={`${
-          recipe.ingredients.length ? "col-span-1" : "col-span-3"
-        } flex flex-col px-5 justify-center items-center`}
+          recipe.ingredients.length ? "md:col-span-1" : "md:col-span-3"
+        } col-span-3 flex flex-col px-5 justify-center items-center`}
       >
         {ingredients.map((ingredient, i: number) => (
           <button
@@ -102,8 +102,8 @@ export default function Home() {
       </div>
       <div
         className={`${
-          recipe.ingredients.length ? "col-span-2" : "hidden"
-        } flex justify-center items-center`}
+          recipe.ingredients.length ? "md:col-span-2" : "hidden"
+        } col-span-3 flex justify-center items-center`}
       >
         <div>
           <div className="border-black border-b-2 p-2">
