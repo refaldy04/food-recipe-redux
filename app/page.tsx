@@ -1,113 +1,237 @@
-import Image from 'next/image'
+"use client";
+
+import {
+  selectRecipe,
+  addStep,
+  setEdit,
+  editAmount,
+  editStep,
+  deleteListItem,
+} from "@/lib/features/recipe/recipeSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 export default function Home() {
+  const recipe = useAppSelector((state) => state.recipeReducer.recipe);
+  const ingredients = useAppSelector(
+    (state) => state.recipeReducer.ingredients
+  );
+  const dispatch = useAppDispatch();
+
+  const handleSelectRecipe = (ingredient: string) => {
+    dispatch(selectRecipe(ingredient));
+  };
+
+  const handleAddRecipe = (key: string, step: string) => {
+    if (key === "Enter") {
+      console.log("test", step);
+
+      dispatch(addStep(step));
+    }
+  };
+
+  const handleEdit = ({
+    field,
+    value,
+  }: {
+    field: "ingredients" | "steps";
+    value: string | number;
+  }) => {
+    dispatch(setEdit({ field, value }));
+  };
+
+  const handleEditAmount = ({
+    name,
+    amount,
+  }: {
+    name: string;
+    amount: number;
+  }) => {
+    dispatch(
+      editAmount({
+        name,
+        amount,
+      })
+    );
+  };
+
+  const handleEditStep = ({
+    index,
+    value,
+  }: {
+    index: number;
+    value: string;
+  }) => {
+    dispatch(
+      editStep({
+        index,
+        value,
+      })
+    );
+  };
+
+  const handleDeleteListItem = ({
+    field,
+    value,
+  }: {
+    field: "ingredients" | "steps";
+    value: string | number;
+  }) => {
+    dispatch(deleteListItem({ field, value }));
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="grid grid-cols-3 min-h-screen items-center justify-center">
+      <div
+        className={`${
+          recipe.ingredients.length ? "col-span-1" : "col-span-3"
+        } flex flex-col px-5 justify-center items-center`}
+      >
+        {ingredients.map((ingredient, i: number) => (
+          <button
+            key={i}
+            className={`${
+              recipe.ingredients.find((i) => i.name === ingredient.name)
+                ? "hidden"
+                : ""
+            } border border-black p-2 mb-2 w-[200px] rounded-md`}
+            onClick={() => handleSelectRecipe(ingredient.name)}
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+            {ingredient.name}
+          </button>
+        ))}
+      </div>
+      <div
+        className={`${
+          recipe.ingredients.length ? "col-span-2" : "hidden"
+        } flex justify-center items-center`}
+      >
+        <div>
+          <div className="border-black border-b-2 p-2">
+            <input
+              className="bg-transparent outline-none w-full text-center"
+              placeholder="Input Recipe Name"
             />
-          </a>
+          </div>
+          <div className="mt-3 flex flex-col gap-2">
+            {recipe.ingredients?.map((ingredient, i: number) => (
+              <div key={i} className="flex gap-2 justify-between items-center">
+                <div className="flex gap-2">
+                  {(recipe.isEditActive?.field === "ingredients" &&
+                    recipe.isEditActive?.value === ingredient.name) ||
+                  ingredient.amount === 0 ? (
+                    <div className="border-black border-b-2">
+                      <input
+                        type="number"
+                        className="bg-transparent outline-none w-[40px] text-center"
+                        defaultValue={ingredient.amount}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleEditAmount({
+                              name: ingredient.name,
+                              amount: Number(e.currentTarget.value),
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <p>{ingredient.amount}</p>
+                  )}
+                  <span
+                    className="cursor-pointer"
+                    onClick={() =>
+                      handleEdit({
+                        field: "ingredients",
+                        value: ingredient.name,
+                      })
+                    }
+                  >
+                    {ingredient.unit} {ingredient.name}
+                  </span>
+                </div>
+                <div
+                  className={`${
+                    recipe.isEditActive?.field === "ingredients" &&
+                    recipe.isEditActive?.value === ingredient.name
+                      ? "flex"
+                      : "hidden"
+                  } gap-2`}
+                >
+                  <button
+                    className="py-2 px-1 rounded-lg bg-red-500"
+                    onClick={() =>
+                      handleDeleteListItem({
+                        field: "ingredients",
+                        value: ingredient.name,
+                      })
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <br />
+          <br />
+          <span>Steps :</span>
+          <div className="border-black border-b-2 p-2">
+            <input
+              className="bg-transparent outline-none w-full"
+              placeholder="Input Step"
+              onKeyDown={(e) => handleAddRecipe(e.key, e.currentTarget.value)}
+            />
+          </div>
+          <div>
+            {recipe.steps?.map((step, i: number) => (
+              <div className="flex justify-between items-center my-2 gap-5">
+                {recipe.isEditActive?.field === "steps" &&
+                recipe.isEditActive?.value === i ? (
+                  <div className="border-black border-b-2">
+                    <input
+                      className="bg-transparent outline-none w-full text-center"
+                      defaultValue={step}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleEditStep({
+                            index: i,
+                            value: e.currentTarget.value,
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <span
+                    onClick={() => handleEdit({ field: "steps", value: i })}
+                    className="cursor-pointer"
+                  >
+                    {i + 1}. {step}
+                  </span>
+                )}
+
+                <div
+                  className={`${
+                    recipe.isEditActive?.field === "steps" &&
+                    i === recipe.isEditActive?.value
+                      ? "flex"
+                      : "hidden"
+                  } gap-2`}
+                >
+                  <button
+                    className="py-2 px-1 rounded-lg bg-red-500"
+                    onClick={() =>
+                      handleDeleteListItem({ field: "steps", value: i })
+                    }
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
-  )
+  );
 }
